@@ -11,6 +11,11 @@ output_file = '/Users/yang/Desktop/MOF Cat data/CCS100 Spectrum Data MOFCat Cali
 # === Manually set wavelength range for calculation ===
 target_range = (400, 420)  # Search for the best wavelength only within this range
 
+# === Manually set window size for wavelength averaging
+window = 5
+# Half window must be an integer
+half_window = np.floor(window/2)
+
 # === Step 1: Get all sample files and concentrations, and add the (0, 0) data point ===
 # === Step 1: Get all sample files and concentrations, and add the (0, 0) data point ===
 
@@ -76,8 +81,14 @@ for i in range(len(wavelengths)):
         models.append(None)
         continue
 
-    # abs_matrix[:, i] now includes the (0, 0) data point
-    abs_values = abs_matrix[:, i]
+    # Window bounds centered around index i and extend by half_window. 
+    #   +1 due to python indexing cutting off last value in window
+    i_min = max(0, i - half_window)
+    i_max = min(len(wavelengths), i + half_window + 1)
+
+    # Mean computed over range of wavelengths for robustness
+    abs_values = np.mean(abs_matrix[:, i_min:i_max], axis=1)
+
     conc_values = concentrations_all
 
     # In this modified version, absorbance <= 0 points are not filtered
